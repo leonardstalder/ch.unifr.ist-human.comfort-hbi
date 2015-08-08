@@ -1,88 +1,145 @@
-
-
-Visualization: Gauge
-Overview
-
-A gauge with a dial, rendered within the browser using SVG or VML.
-Example
-
 <html>
-  <head>
-  	<script src="mqtt.js"></script>
-    <script type="text/javascript" src="https://www.google.com/jsapi"></script>
-    <script type="text/javascript">
-    // Create a client instance
-client = new Paho.MQTT.Client("test.mosquitto.org", 8080, "clientId");
+	<head>
+  		<script src="mqtt.js"></script>
+    	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+    	<script type="text/javascript">
+		// Create a client instance
+		client = new Paho.MQTT.Client("86.119.35.60", 9001, "clientId");
+		// set callback handlers
+		client.onConnectionLost = onConnectionLost;
+		client.onMessageArrived = onMessageArrived;
+		// connect the client
+		client.connect({onSuccess:onConnect});
+		// global variables
+		hum_sensor1 = 0; 
+		hum_sensor2 = 0; 
+		temp_sensor1 = 0; 
+		temp_sensor2 = 0; 
+		lux_sensor1 = 0; 
+		lux_sensor2 = 0; 
+		co2_sensor2 = 0;
+		co2_sensor1 = 0;
+				
+		// called when the client connects
+		function onConnect() {
+			client.subscribe("sensor12/hum");
+			client.subscribe("sensor2/hum");
+			client.subscribe("sensor12/temp");
+			client.subscribe("sensor2/temp");
+			client.subscribe("sensor12/lux");
+			client.subscribe("sensor2/lux");
+			client.subscribe("sensor12/co2");
+			client.subscribe("sensor2/co2");
+		}
 
-// set callback handlers
-client.onConnectionLost = onConnectionLost;
-client.onMessageArrived = onMessageArrived;
+		// called when the client loses its connection
+		function onConnectionLost(responseObject) {
+  			if (responseObject.errorCode !== 0) {
+    			console.log("onConnectionLost:"+responseObject.errorMessage);
+  			}
+		}
 
-// connect the client
-client.connect({onSuccess:onConnect});
+		// called when a message arrives
+		function onMessageArrived(message) {
+		console.log(message.destinationName);
+  			if (message.destinationName == "sensor12/hum")
+				hum_sensor1 = message.payloadString;
+			if (message.destinationName == "sensor2/hum")
+				hum_sensor2 = message.payloadString;
+		  	if (message.destinationName == "sensor12/temp")
+				temp_sensor1 = message.payloadString;
+		  	if (message.destinationName == "sensor2/temp")
+				temp_sensor2 = message.payloadString;
+		  	if (message.destinationName == "sensor12/lux")
+				lux_sensor1 = message.payloadString;
+		  	if (message.destinationName == "sensor2/lux")
+				lux_sensor2 = message.payloadString;
+		  	if (message.destinationName == "sensor12/co2")
+				co2_sensor1 = message.payloadString;
+			if (message.destinationName == "sensor2/co2")
+				co2_sensor2 = message.payloadString;
+		} 
+		
+		google.load("visualization", "1", {packages:["gauge"]});
+		google.setOnLoadCallback(drawChart);
+		function drawChart() {
+			var data = google.visualization.arrayToDataTable([
+          	['Label', 'Value'],
+          	['Humidity', 0],
+          	['Temperature', 0],
+          	['Luminance', 0],
+          	['CO2 PPM', 0]
+        	]);
+ 			var data2 = google.visualization.arrayToDataTable([
+          	['Label', 'Value'],
+          	['Humidity', 0],
+          	['Temperature', 0],
+          	['Luminance', 0],
+          	['CO2 PPM', 0]
+        	]);       	
 
-val = 20; 
-
-// called when the client connects
-function onConnect() {
-  // Once a connection has been made, make a subscription and send a message.
-  console.log("onConnect");
-  client.subscribe("sensor/hum");
-}
-
-// called when the client loses its connection
-function onConnectionLost(responseObject) {
-  if (responseObject.errorCode !== 0) {
-    console.log("onConnectionLost:"+responseObject.errorMessage);
-  }
-}
-
-// called when a message arrives
-function onMessageArrived(message) {
-  val = message.payloadString;
-} 
-    
-    
-    
-      google.load("visualization", "1", {packages:["gauge"]});
-      google.setOnLoadCallback(drawChart);
-      function drawChart() {
-
-        var data = google.visualization.arrayToDataTable([
-          ['Label', 'Value'],
-          ['Humidity', 80],
-          ['CPU', 55],
-          ['Network', 68]
-        ]);
-
-        var options = {
-          width: 400, height: 120,
-          redFrom: 90, redTo: 100,
-          yellowFrom:75, yellowTo: 90,
-          minorTicks: 5
+        	var options = {
+          	width: 800, height: 120,
+          	redFrom: 90, redTo: 100,
+          	yellowFrom:75, yellowTo: 90,
+          	minorTicks: 5
         };
-
+    	var options_lux = {
+          	width: 800, height: 120,
+          	redFrom: 800, redTo: 900,
+          	yellowFrom:750, yellowTo: 800, max:1500,
+          	minorTicks: 5
+        };
+        
         var chart = new google.visualization.Gauge(document.getElementById('chart_div'));
-
         chart.draw(data, options);
-
+        var chart2 = new google.visualization.Gauge(document.getElementById('chart_div2'));
+        chart2.draw(data2, options);
+        
+        
         setInterval(function() {
-          data.setValue(0, 1, val);
+          data.setValue(0, 1, hum_sensor1);
           chart.draw(data, options);
-        }, 100);
+        }, 1000);
         setInterval(function() {
-          data.setValue(1, 1, 40 + Math.round(60 * Math.random()));
+          data.setValue(1, 1, temp_sensor1);
           chart.draw(data, options);
-        }, 5000);
+        }, 1000);
         setInterval(function() {
-          data.setValue(2, 1, 60 + Math.round(20 * Math.random()));
+          data.setValue(2, 1, lux_sensor1);
           chart.draw(data, options);
-        }, 26000);
+        }, 1000);
+        setInterval(function() {
+          data.setValue(3, 1, co2_sensor1);
+          chart.draw(data, options);
+        }, 1000);
+        setInterval(function() {
+          data2.setValue(0, 1, hum_sensor2);
+          chart2.draw(data2, options);
+        }, 1000);
+        setInterval(function() {
+          data2.setValue(1, 1, temp_sensor2);
+          chart2.draw(data2, options);
+        }, 1000);
+        setInterval(function() {
+          data2.setValue(2, 1, lux_sensor2);
+          chart2.draw(data2, options);
+        }, 1000);
+        setInterval(function() {
+          data2.setValue(3, 1, co2_sensor2);
+          chart2.draw(data2, options);
+        }, 1000);
       }
+      
     </script>
   </head>
   <body>
+  	<div><h1>sensor values</h1></div>
+  	<div><h2>sensor kit 1</h2>
     <div id="chart_div" style="width: 400px; height: 120px;"></div>
+  	<div><h2>sensor kit 2</h2>
+    <div id="chart_div2" style="width: 400px; height: 120px;"></div>
+
   </body>
 </html>
 

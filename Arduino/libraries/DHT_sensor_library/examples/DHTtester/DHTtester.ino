@@ -29,6 +29,7 @@ DHT dht(DHTPIN, DHTTYPE);
 //DHT dht(DHTPIN, DHTTYPE, 30);
 
 void setup() {
+  while (!Serial) ; //needed for leonardo and micro
   Serial.begin(9600); 
   Serial.println("DHTxx test!");
  

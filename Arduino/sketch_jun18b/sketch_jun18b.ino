@@ -57,7 +57,7 @@ void loop() {
   payload.id++;
   payload.temp= (int)(t*10); 
   payload.hum= (int) (h*10); 
-    Serial.print(" Humidity: "); 
+  Serial.print(" Humidity: "); 
   Serial.print(h);
   Serial.print(" %\tTemperature: "); 
   Serial.println(t);
